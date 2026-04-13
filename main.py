@@ -1,109 +1,121 @@
-from flask import Flask, render_template, request
-import google.generativeai as genai
-import os
+from flask import Flask, render_template, request, send_file
 import PyPDF2
+import pdfkit
+import re
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# Set up the Google API Key
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCrWR7rp350HAbwNwZbOIAqNymVP00AOKU"
-genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+# -----------------------------
+# EMAIL DETECTION
+# -----------------------------
+def detect_email(text):
+    text = text.lower()
 
-# Initialize the Gemini model
-model = genai.GenerativeModel("gemini-1.5-flash")
+    keywords = [
+        "win","winner","prize","lottery","money","free",
+        "urgent","verify","bank","click here"
+    ]
 
-# functions
-def predict_fake_or_real_email_content(text):
-    prompt = f"""
-    You are an expert in identifying scam messages in text, email etc. Analyze the given text and classify it as:
+    score = sum(word in text for word in keywords) * 20
+    score = min(score, 100)
 
-    - **Real/Legitimate** (Authentic, safe message)
-    - **Scam/Fake** (Phishing, fraud, or suspicious message)    
+    if score >= 60:
+        result = f"Scam Detected ({score}%)"
+    elif score >= 30:
+        result = f"Suspicious ({score}%)"
+    else:
+        result = f"Safe ({score}%)"
 
-    **for the following Text:**
-    {text}
-
-    **Return a clear message indicating whether this content is real or a scam. 
-    If it is a scam, mention why it seems fraudulent. If it is real, state that it is legitimate.**
-
-    **Only return the classification message and nothing else.**
-    Note: Don't return empty or null, you only need to return message for the input text
-    """
-
-    response = model.generate_content(prompt)
-    return response.text.strip() if response else "Classification failed."
+    return result
 
 
-def url_detection(url):
-    prompt = f"""
-    You are an advanced AI model specializing in URL security classification. Analyze the given URL and classify it as one of the following categories:
+# -----------------------------
+# URL DETECTION
+# -----------------------------
+def detect_url(url):
+    url = url.lower()
 
-    1. Benign**: Safe, trusted, and non-malicious websites such as google.com, wikipedia.org, amazon.com.
-    2. Phishing**: Fraudulent websites designed to steal personal information. Indicators include misspelled domains (e.g., paypa1.com instead of paypal.com), unusual subdomains, and misleading content.
-    3. Malware**: URLs that distribute viruses, ransomware, or malicious software. Often includes automatic downloads or redirects to infected pages.
-    4. Defacement**: Hacked or defaced websites that display unauthorized content, usually altered by attackers.
-
-    **Example URLs and Classifications:**
-    - **Benign**: "https://www.microsoft.com/"
-    - **Phishing**: "http://secure-login.paypa1.com/"
-    - **Malware**: "http://free-download-software.xyz/"
-    - **Defacement**: "http://hacked-website.com/"
-
-    **Input URL:** {url}
-
-    **Output Format:**  
-    - Return only a string class name
-    - Example output for a phishing site:  
-
-    Analyze the URL and return the correct classification (Only name in lowercase such as benign etc.
-    Note: Don't return empty or null, at any cost return the corrected class
-    """
-
-    response = model.generate_content(prompt)
-    return response.text if response else "Detection failed."
+    if "login" in url or "verify" in url:
+        return "phishing (80%)"
+    elif ".xyz" in url:
+        return "malware (90%)"
+    else:
+        return "safe (10%)"
 
 
-# Routes
-
+# -----------------------------
 @app.route('/')
 def home():
     return render_template("index.html")
 
 
+# -----------------------------
 @app.route('/scam/', methods=['POST'])
-def detect_scam():
-    if 'file' not in request.files:
-        return render_template("index.html", message="No file uploaded.")
+def scam():
 
     file = request.files['file']
-    extracted_text = ""
+    text = ""
 
-    if file.filename.endswith('.pdf'):
-        pdf_reader = PyPDF2.PdfReader(file)
-        extracted_text = " ".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
-    elif file.filename.endswith('.txt'):
-        extracted_text = file.read().decode("utf-8")
-    else:
-        return render_template("index.html", message="Invalid file type. Please upload a PDF or TXT file.")
+    if file.filename.endswith('.txt'):
+        text = file.read().decode("utf-8", errors="ignore")
 
-    if not extracted_text.strip():
-        return render_template("index.html", message="File is empty or text could not be extracted.")
+    elif file.filename.endswith('.pdf'):
+        pdf = PyPDF2.PdfReader(file)
+        for page in pdf.pages:
+            if page.extract_text():
+                text += page.extract_text()
 
-    message = predict_fake_or_real_email_content(extracted_text)
-    return render_template("index.html", message=message)
+    result = detect_email(text)
+
+    return render_template("index.html", message=result)
 
 
+# -----------------------------
 @app.route('/predict', methods=['POST'])
-def predict_url():
-    url = request.form.get('url', '').strip()
+def predict():
 
-    if not url.startswith(("http://", "https://")):
-        return render_template("index.html", message="Invalid URL format.", input_url=url)
+    url = request.form.get('url')
+    result = detect_url(url)
 
-    classification = url_detection(url)
-    return render_template("index.html", input_url=url, predicted_class=classification)
+    return render_template("index.html",
+                           predicted_class=result,
+                           input_url=url)
 
 
-if __name__ == '__main__':
+# -----------------------------
+@app.route('/download_report')
+def download_report():
+
+    result = request.args.get('result', 'Safe')
+
+    # Extract score
+    match = re.search(r'(\d+)%', result)
+    score = int(match.group(1)) if match else 0
+
+    # Color logic
+    if score >= 70:
+        color = "#ff4d4d"
+    elif score >= 40:
+        color = "#ffa500"
+    else:
+        color = "#4caf50"
+
+    rendered = render_template(
+        "report.html",
+        result=result,
+        score=score,
+        color=color
+    )
+
+    config = pdfkit.configuration(
+        wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    )
+
+    pdfkit.from_string(rendered, "report.pdf", configuration=config)
+
+    return send_file("report.pdf", as_attachment=True)
+
+
+# -----------------------------
+if __name__ == "__main__":
     app.run(debug=True)

@@ -1,168 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL Threat Detector</title>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #0d1117;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThreatGuard Pro - AI Cybersecurity Scanner</title>
 
-        /* Navbar */
-        .navbar {
-            width: 100%;
-            background: #161b22;
-            padding: 25px 0;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            position: fixed;
-            top: 0;
-            left: 0;
-        }
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        .navbar h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: bold;
-            color: #58a6ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+<style>
+/* YOUR ORIGINAL CSS (UNCHANGED) */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0c0c0c 0%,#1a1a2e 50%,#16213e 100%);color:#fff;min-height:100vh;}
+.container{max-width:1200px;margin:auto;padding:20px;}
+.header{text-align:center;margin-bottom:50px;}
+.logo{font-size:3rem;font-weight:700;background:linear-gradient(45deg,#00d4ff,#ff00ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.subtitle{color:#aaa;}
 
-        .container {
-            margin-top: 120px;
-            background: #1c2128;
-            padding: 40px;
-            border-radius: 12px;
-            width: 70%;
-            max-width: 800px;
-            text-align: center;
-        }
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(500px,1fr));gap:30px;}
 
-        input {
-            width: 95%;
-            padding: 14px;
-            font-size: 18px;
-            border: 2px solid #58a6ff;
-            border-radius: 8px;
-            background-color: #22272e;
-            color: white;
-            margin-bottom: 15px;
-        }
+.card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+border-radius:24px;
+padding:40px;
+transition:0.4s;
+}
 
-        button {
-            background-color: #238636;
-            color: white;
-            padding: 14px;
-            font-size: 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            border: none;
-        }
+.card:hover{transform:translateY(-10px);}
 
-        button:hover {
-            background-color: #2ea043;
-            transform: scale(1.05);
-        }
+.btn{
+width:100%;
+padding:18px;
+background:linear-gradient(135deg,#00d4ff,#0099cc);
+border:none;
+border-radius:16px;
+font-size:1.1rem;
+color:#fff;
+cursor:pointer;
+}
 
-        .scan-icon {
-            font-size: 20px;
-        }
+.form-input{
+width:100%;
+padding:18px;
+border-radius:16px;
+background:#111;
+color:#fff;
+border:1px solid #333;
+}
 
-        /* Spinner */
-        .spinner {
-            display: none;
-            margin: 10px auto;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
+.file-input-wrapper input{display:none;}
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+.file-input-label{
+display:block;
+padding:18px;
+border:2px dashed rgba(255,107,107,0.5);
+border-radius:16px;
+text-align:center;
+cursor:pointer;
+}
 
-        /* Result Styling */
-        .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 5px;
-            font-size: 18px;
-        }
+.result{
+margin-top:20px;
+padding:20px;
+border-radius:16px;
+text-align:center;
+font-size:1.2rem;
+}
 
-        .benign { color: #34D399; }
-        .defacement { color: #F59E0B; }
-        .malware { color: #EF4444; }
-        .phishing { color: #8B5CF6; }
-        .unknown { color: #ffffff; }
-    </style>
+.safe{color:#4caf50;}
+.phishing{color:#9c27b0;}
+.malware{color:#f44336;}
+.defacement{color:#ff9800;}
 
-    <script>
-        function showSpinner(formId, spinnerId) {
-            document.getElementById(spinnerId).style.display = 'block';
-            setTimeout(() => {
-                document.getElementById(spinnerId).style.display = 'none';
-            }, 3000);  // Simulating loading time
-        }
-    </script>
+.loading{display:none;text-align:center;margin-top:30px;}
+.spinner{
+border:4px solid rgba(255,255,255,0.1);
+border-left:4px solid #00d4ff;
+height:40px;width:40px;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:auto;
+}
+@keyframes spin{100%{transform:rotate(360deg);}}
+</style>
+
+<script>
+function showLoading(){
+    document.getElementById("loadingBar").style.display="block";
+}
+
+function updateFileName(input){
+    const label = document.getElementById("fileLabel");
+    if(input.files.length > 0){
+        label.innerHTML = "📄 " + input.files[0].name;
+    }
+}
+</script>
+
 </head>
+
 <body>
 
-    <div class="navbar">
-        <h1><i class="fas fa-shield-alt"></i> ThreatGuard</h1>
+<div class="container">
+
+<div class="header">
+    <div class="logo">
+        <i class="fas fa-shield-alt"></i> ThreatGuard Pro
     </div>
+    <div class="subtitle">AI-Powered Cybersecurity Scanner</div>
+</div>
 
-    <div class="container">
-        <h2><i class="fas fa-exclamation-triangle"></i> Malicious Files</h2>
-        <form action="/scam/" method="post" enctype="multipart/form-data" onsubmit="showSpinner('fileForm', 'fileSpinner')">
-            <label for="file"><strong>Upload a file (PDF/TXT only):</strong></label><br>
-            <input type="file" name="file" required><br>
-            <button type="submit"><i class="fas fa-upload scan-icon"></i> Analyze</button>
-            <div id="fileSpinner" class="spinner"></div>
-        </form>
+<div class="cards-grid">
 
-        {% if message %}
-        <h3>Result:</h3>
-        <p>{{ message }}</p>
-        {% endif %}
+<!-- FILE -->
+<div class="card">
+<h3><i class="fas fa-upload"></i> File Scam Detector</h3>
 
-        <h2><i class="fas fa-link"></i> URL Threat Detection</h2>
-        <form method="post" action="/predict" onsubmit="showSpinner('urlForm', 'urlSpinner')">
-            <label for="url">Enter URL:</label>
-            <input type="text" name="url" required>
-            <button type="submit"><i class="fas fa-search"></i> Classify</button>
-            <div id="urlSpinner" class="spinner"></div>
-        </form>
+<form action="/scam/" method="post" enctype="multipart/form-data" onsubmit="showLoading()">
 
-        {% if predicted_class %}
-            <div class="result-box {{ predicted_class.lower() }}">
-                <p><strong>URL:</strong> {{ input_url }}</p>
-                <p><strong>Predicted Class:</strong> {{ predicted_class }}</p>
-            </div>
-        {% endif %}
-    </div>
+<div class="file-input-wrapper">
+<input type="file" name="file" id="fileInput" accept=".pdf,.txt" required onchange="updateFileName(this)">
+<label for="fileInput" class="file-input-label" id="fileLabel">
+<i class="fas fa-cloud-upload-alt"></i> Choose file...
+</label>
+</div>
+
+<br>
+<button type="submit" class="btn">Analyze File</button>
+</form>
+
+{% if message %}
+<div class="result 
+{% if 'Scam' in message %}phishing
+{% elif 'Suspicious' in message %}defacement
+{% else %}safe{% endif %}">
+{{ message }}
+</div>
+{% endif %}
+</div>
+
+<!-- URL -->
+<div class="card">
+<h3><i class="fas fa-link"></i> URL Scanner</h3>
+
+<form method="post" action="/predict" onsubmit="showLoading()">
+<input type="url" name="url" class="form-input" required>
+<br><br>
+<button type="submit" class="btn">Scan URL</button>
+</form>
+
+{% if predicted_class %}
+<div class="result 
+{% if 'phishing' in predicted_class %}phishing
+{% elif 'malware' in predicted_class %}malware
+{% else %}safe{% endif %}">
+<p>{{ input_url }}</p>
+<p><strong>{{ predicted_class }}</strong></p>
+</div>
+{% endif %}
+</div>
+
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loadingBar">
+<div class="spinner"></div>
+<p>Scanning...</p>
+</div>
+
+<!-- DOWNLOAD -->
+{% if message or predicted_class %}
+<div style="text-align:center;margin-top:30px;">
+<a href="/download_report?result={{ message or predicted_class }}">
+<button class="btn">⬇ Download Report</button>
+</a>
+</div>
+{% endif %}
+
+</div>
 
 </body>
 </html>

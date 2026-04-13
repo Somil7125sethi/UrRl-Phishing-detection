@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<!-- ICONS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+body{
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+    padding:40px;
+}
+.container{
+    background:#1e293b;
+    padding:30px;
+    border-radius:15px;
+}
+
+.box{
+    margin:20px 0;
+    padding:20px;
+    border-radius:10px;
+    background:#020617;
+}
+
+.risk{
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+.bar{
+    height:20px;
+    background:#334155;
+    border-radius:10px;
+}
+.fill{
+    height:100%;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1 style="text-align:center;">
+<i class="fas fa-shield-alt"></i> ThreatGuard Pro Report
+</h1>
+
+<div class="box">
+<h3><i class="fas fa-search"></i> Analysis Result</h3>
+<p>{{ result }}</p>
+</div>
+
+<div class="box risk" style="background: {{ color }}">
+<i class="fas fa-exclamation-triangle"></i>
+Risk Score: {{ score }}%
+</div>
+
+<div class="box">
+<h3><i class="fas fa-chart-bar"></i> Risk Meter</h3>
+<div class="bar">
+<div class="fill" style="width: {{ score }}%; background: {{ color }}"></div>
+</div>
+</div>
+
+<div class="box">
+<h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+<ul>
+<li>Do not click unknown links</li>
+<li>Verify sender identity</li>
+<li>Enable 2FA security</li>
+<li>Use antivirus protection</li>
+</ul>
+</div>
+
+<div class="box" style="text-align:center;">
+<i class="fas fa-lock"></i> Stay Safe | Stay Protected
+</div>
+
+</div>
+
+</body>
+</html>
